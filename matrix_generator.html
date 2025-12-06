@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>建筑边界绘制器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background: #f5f5f0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            max-width: 1200px;
+            width: 100%;
+            border: 1px solid #e0e0e0;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 60px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            background-image: linear-gradient(rgba(255,255,255,0.7), rgba(255,255,255,0.7)), url('标题背景图.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            position: relative;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.8em;
+            margin-bottom: 12px;
+            font-weight: 700;
+            letter-spacing: -1px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            display: block;
+            padding: 12px 24px;
+        }
+
+        .header p {
+            color: #34495e;
+            font-size: 1.2em;
+            font-weight: 300;
+            letter-spacing: 1px;
+            display: block;
+            padding: 8px 16px;
+        }
+
+        .main-content {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+            flex-direction: row; /* 默认水平布局，适合电脑等横屏设备 */
+        }
+
+        .grid-container {
+            flex: 1;
+            min-width: 300px;
+            max-width: 600px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(20, 1fr);
+            grid-template-rows: repeat(20, 1fr);
+            gap: 0;
+            background: #ffffff;
+            border: 1px solid #333;
+            overflow: hidden;
+            aspect-ratio: 1;
+            max-width: 600px;
+            margin: 0 auto;
+            cursor: crosshair;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .cell {
+            background: #ffffff;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6em;
+            font-weight: 400;
+            position: relative;
+            border: 0.5px solid #d0d0d0;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .cell:hover {
+            background: #f0f0f0;
+        }
+
+        .cell.boundary {
+            background: #000000;
+            color: transparent;
+            border-color: #000000;
+        }
+
+        .cell.boundary:hover {
+            background: #333333;
+            border-color: #333333;
+        }
+
+        .cell.inner {
+            background: #e74c3c;
+            color: transparent;
+            border-color: #d0d0d0;
+            opacity: 0.2;
+        }
+
+        .cell.inner.boundary {
+            background: #000000;
+            border-color: #000000;
+        }
+
+        .controls {
+            flex: 0 0 320px;
+        }
+
+        .control-section {
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .control-section h3 {
+            color: #2c3e50;
+            margin-bottom: 16px;
+            font-size: 1.1em;
+            font-weight: 600;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 8px;
+        }
+
+        .drawing-modes {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 12px 16px;
+            border: 1px solid #333;
+            background: #ffffff;
+            color: #333;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            text-align: center;
+            letter-spacing: 0.1px;
+        }
+
+        .btn:hover {
+            background: #f0f0f0;
+            transform: none;
+        }
+
+        .btn-primary {
+            background: #2c3e50;
+            color: white;
+            border-color: #2c3e50;
+        }
+
+        .btn-primary:hover {
+            background: #34495e;
+        }
+
+        .btn-secondary {
+            background: #ffffff;
+            color: #333;
+            border: 1px solid #333;
+        }
+
+        .btn-secondary:hover {
+            background: #f0f0f0;
+        }
+
+        .btn-danger {
+            background: #ffffff;
+            color: #e74c3c;
+            border: 1px solid #e74c3c;
+        }
+
+        .btn-danger:hover {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-success {
+            background: #ffffff;
+            color: #27ae60;
+            border: 1px solid #27ae60;
+        }
+
+        .btn-success:hover {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-info {
+            background: #ffffff;
+            color: #3498db;
+            border: 1px solid #3498db;
+        }
+
+        .btn-info:hover {
+            background: #3498db;
+            color: white;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .stats {
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            padding: 16px;
+            margin-top: 16px;
+        }
+
+        .stats-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            padding: 4px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .stats-item:last-child {
+            margin-bottom: 0;
+            border-bottom: none;
+        }
+
+        .stats-label {
+            color: #7f8c8d;
+            font-weight: 500;
+        }
+
+        .stats-value {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .instructions {
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .instructions h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-weight: 600;
+            font-size: 1.1em;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 6px;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+            color: #333;
+            padding-left: 8px;
+        }
+
+        .instructions li {
+            margin-bottom: 6px;
+            line-height: 1.5;
+            font-size: 0.9em;
+        }
+
+        /* 优化选择器样式 */
+        #gridSize {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #333;
+            background: #ffffff;
+            color: #333;
+            font-size: 0.9em;
+            margin-bottom: 8px;
+        }
+
+        #gridSize:focus {
+            outline: none;
+            background: #f0f8ff;
+        }
+
+        /* 基于屏幕方向的媒体查询 */
+        @media (orientation: portrait) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .controls {
+                flex: 1;
+                max-width: 100%;
+            }
+            
+            .grid {
+                max-width: 100%;
+            }
+        }
+        
+        @media (orientation: landscape) {
+            .main-content {
+                flex-direction: row;
+            }
+            
+            .controls {
+                flex: 0 0 280px;
+            }
+            
+            .grid {
+                max-width: 600px;
+            }
+        }
+        
+        /* 小屏幕设备的额外调整 */
+        @media (max-width: 768px) {
+            .grid {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>建筑边界绘制器</h1>
+            <p>编辑网格单元生成建筑边界，导出房间布局矩阵</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="grid-container">
+                <div class="grid" id="grid"></div>
+            </div>
+            
+            <div class="controls">
+                <div class="instructions">
+                <h4>操作指南</h4>
+                <ul>
+                    <li style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <strong>左键点击/拖拽</strong>：绘制建筑边界
+                        <img src="左键绘制边界.png" alt="左键绘制边界" style="width: 30px; height: 30px; margin-left: 10px; vertical-align: middle; border: 1px solid #ddd; border-radius: 4px;">
+                    </li>
+                    <li style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <strong>右键点击/拖拽</strong>：擦除建筑边界
+                        <img src="右键擦除边界.png" alt="右键擦除边界" style="width: 30px; height: 30px; margin-left: 10px; vertical-align: middle; border: 1px solid #ddd; border-radius: 4px;">
+                    </li>
+                    <li><strong>黑色单元格</strong>：表示建筑边界</li>
+                    <li><strong>白色单元格</strong>：表示空白区域</li>
+                    <li><strong>半透明红色单元格</strong>：表示围合的内部区域</li>
+                    <li>每个单元格代表 <strong id="cellSize">1m × 1m</strong> 的实际空间</li>
+                </ul>
+            </div>
+            
+            <div class="control-section">
+                <h3>画布设置</h3>
+                <div class="drawing-modes">
+                    <label for="gridSize" style="display: block; margin-bottom: 10px; color: #666;">画布大小:</label>
+                    <select id="gridSize" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-size: 1em;">
+                        <option value="10">10x10</option>
+                        <option value="20" selected>20x20</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <h3>绘制信息</h3>
+                <div class="stats">
+                    <div class="stats-item">
+                        <span class="stats-label">操作方式:</span>
+                        <span class="stats-value" id="currentMode">左键绘制，右键擦除</span>
+                    </div>
+                    <div class="stats-item">
+                        <span class="stats-label">边界格子:</span>
+                        <span class="stats-value" id="boundaryCells">0</span>
+                    </div>
+                    <div class="stats-item">
+                        <span class="stats-label">建筑总面积:</span>
+                        <span class="stats-value" id="enclosedArea">0</span>
+                    </div>
+                    <div class="stats-item">
+                        <span class="stats-label">实际面积 (m²):</span>
+                        <span class="stats-value" id="actualArea">0</span>
+                    </div>
+                    <div class="stats-item">
+                        <span class="stats-label">总格子数:</span>
+                        <span class="stats-value" id="totalCells">400</span>
+                    </div>
+                </div>
+            </div>
+                
+                <div class="control-section">
+                    <h3>操作</h3>
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" id="exportBtn">导出 JSON</button>
+                        <button class="btn btn-success" id="importBtn">导入 JSON</button>
+                        <input type="file" id="fileInput" class="file-input" accept=".json">
+                        <button class="btn btn-danger" id="clearBtn">清空画布</button>
+                        <button class="btn btn-info" id="previewBtn">预览内部区域</button>
+                        <button class="btn btn-info" id="cancelPreviewBtn">取消预览</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class BoundaryDrawer {
+            constructor() {
+                this.size = parseInt(document.getElementById('gridSize').value) || 20;
+                this.matrix = Array(this.size).fill().map(() => Array(this.size).fill(0));
+                this.isDrawing = false;
+                this.currentAction = 'draw'; // 'draw' or 'erase'
+                this.isPreviewing = false; // 新的标志位，跟踪是否处于预览模式
+                this.init();
+            }
+
+            init() {
+                this.createGrid();
+                this.setupEventListeners();
+                this.updateStats();
+            }
+
+            createGrid() {
+                const gridElement = document.getElementById('grid');
+                gridElement.innerHTML = '';
+                
+                // 更新CSS Grid布局
+                gridElement.style.gridTemplateColumns = `repeat(${this.size}, 1fr)`;
+                gridElement.style.gridTemplateRows = `repeat(${this.size}, 1fr)`;
+                
+                for (let i = 0; i < this.size; i++) {
+                    for (let j = 0; j < this.size; j++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'cell';
+                        cell.dataset.row = i;
+                        cell.dataset.col = j;
+                        
+                        if (this.matrix[i][j] === 1) {
+                            cell.classList.add('boundary');
+                        }
+                        
+                        // 左键绘制，右键擦除
+                        cell.addEventListener('mousedown', (e) => {
+                            e.preventDefault();
+                            if (e.button === 0) { // 左键
+                                this.isDrawing = true;
+                                this.currentAction = 'draw';
+                                this.setCell(i, j, 'draw');
+                            } else if (e.button === 2) { // 右键
+                                this.isDrawing = true;
+                                this.currentAction = 'erase';
+                                this.setCell(i, j, 'erase');
+                            }
+                        });
+                        
+                        // 鼠标悬停继续绘制/擦除
+                        cell.addEventListener('mouseenter', (e) => {
+                            if (this.isDrawing) {
+                                e.preventDefault();
+                                this.setCell(i, j, this.currentAction);
+                            }
+                        });
+                        
+                        // 右键菜单禁用
+                        cell.addEventListener('contextmenu', (e) => {
+                            e.preventDefault();
+                        });
+                        
+                        // 触摸事件（移动设备支持）
+                        cell.addEventListener('touchstart', (e) => {
+                            e.preventDefault();
+                            this.isDrawing = true;
+                            this.currentAction = 'draw';
+                            this.startDrawing(e, i, j);
+                        });
+                        cell.addEventListener('touchmove', (e) => {
+                            e.preventDefault();
+                            const touch = e.touches[0];
+                            const element = document.elementFromPoint(touch.clientX, touch.clientY);
+                            if (element && element.classList.contains('cell')) {
+                                const row = parseInt(element.dataset.row);
+                                const col = parseInt(element.dataset.col);
+                                this.continueDrawing(e, row, col);
+                            }
+                        });
+                        cell.addEventListener('touchend', () => this.stopDrawing());
+                        
+                        gridElement.appendChild(cell);
+                    }
+                }
+            }
+
+            // 更新网格大小
+            updateGridSize(newSize) {
+                this.isPreviewing = false;
+                this.size = newSize;
+                this.matrix = Array(this.size).fill().map(() => Array(this.size).fill(0));
+                this.createGrid();
+                this.updateStats();
+            }
+
+            startDrawing(e, row, col) {
+                e.preventDefault();
+                this.isDrawing = true;
+                this.currentAction = 'draw';
+                this.setCell(row, col, 'draw');
+            }
+
+            continueDrawing(e, row, col) {
+                if (this.isDrawing) {
+                    e.preventDefault();
+                    this.setCell(row, col, this.currentAction);
+                }
+            }
+
+            stopDrawing() {
+                this.isDrawing = false;
+            }
+
+            setCell(row, col, action) {
+                const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                
+                if (action === 'draw' && this.matrix[row][col] === 0) {
+                    this.matrix[row][col] = 1;
+                    cell.classList.add('boundary');
+                    this.updateStats();
+                } else if (action === 'erase' && this.matrix[row][col] === 1) {
+                    this.matrix[row][col] = 0;
+                    cell.classList.remove('boundary');
+                    this.updateStats();
+                }
+
+                // 如果处于预览模式，更新预览
+                if (this.isPreviewing) {
+                    this.updatePreview();
+                }
+            }
+
+            setupEventListeners() {
+                // 画布大小变化事件
+                document.getElementById('gridSize').addEventListener('change', (e) => {
+                    const newSize = parseInt(e.target.value);
+                    this.updateGridSize(newSize);
+                    this.updateCellSizeInfo();
+                });
+
+                // 全局鼠标释放事件
+                document.addEventListener('mouseup', () => {
+                    this.stopDrawing();
+                });
+
+                // 全局右键释放事件
+                document.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                });
+
+                // 导出按钮
+                document.getElementById('exportBtn').addEventListener('click', () => {
+                    this.exportJSON();
+                });
+
+                // 导入按钮
+                document.getElementById('importBtn').addEventListener('click', () => {
+                    document.getElementById('fileInput').click();
+                });
+
+                // 文件输入
+                document.getElementById('fileInput').addEventListener('change', (e) => {
+                    this.importJSON(e.target.files[0]);
+                });
+
+                // 清空按钮
+
+                // 清空按钮
+                document.getElementById('clearBtn').addEventListener('click', () => {
+                    this.clearMatrix();
+                });
+
+                // 预览内部区域按钮
+                document.getElementById('previewBtn').addEventListener('click', () => {
+                    this.previewInnerArea();
+                });
+
+                // 取消预览按钮
+                document.getElementById('cancelPreviewBtn').addEventListener('click', () => {
+                    this.cancelPreview();
+                });
+
+                // 初始化单元格大小信息
+                this.updateCellSizeInfo();
+            }
+
+            // 更新操作指南中的单元格大小信息
+            updateCellSizeInfo() {
+                const cellSizeElement = document.getElementById('cellSize');
+                if (this.size === 10) {
+                    cellSizeElement.textContent = '2m × 2m';
+                } else {
+                    cellSizeElement.textContent = '1m × 1m';
+                }
+            }
+
+            // 预览内部区域
+            previewInnerArea() {
+                this.isPreviewing = true;
+                this.updatePreview();
+            }
+
+            // 取消预览
+            cancelPreview() {
+                this.isPreviewing = false;
+                // 移除所有内部区域标记
+                document.querySelectorAll('.cell').forEach(cell => {
+                    cell.classList.remove('inner');
+                });
+            }
+
+            // 更新预览
+            updatePreview() {
+                // 移除所有内部区域标记
+                document.querySelectorAll('.cell').forEach(cell => {
+                    cell.classList.remove('inner');
+                });
+                
+                // 检测边界是否闭合
+                if (this.isBoundaryClosed()) {
+                    // 识别内部区域
+                    const innerMatrix = this.identifyInnerArea();
+                    
+                    // 标记内部区域
+                    for (let i = 0; i < this.size; i++) {
+                        for (let j = 0; j < this.size; j++) {
+                            if (innerMatrix[i][j] === 1 && this.matrix[i][j] === 0) {
+                                const cell = document.querySelector(`[data-row="${i}"][data-col="${j}"]`);
+                                cell.classList.add('inner');
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 移除不再需要的模式切换功能，改用鼠标左右键
+            setDrawMode() {
+                // 保留方法但不执行任何操作，保持向后兼容
+                return;
+            }
+
+            updateStats() {
+                let boundaryCount = 0;
+                for (let i = 0; i < this.size; i++) {
+                    for (let j = 0; j < this.size; j++) {
+                        if (this.matrix[i][j] === 1) {
+                            boundaryCount++;
+                        }
+                    }
+                }
+                
+                // 计算建筑总面积：边界面积 + 围合面积（闭合边界内的所有区域）
+                let totalArea = 0;
+                if (this.isBoundaryClosed()) {
+                    const innerMatrix = this.identifyInnerArea();
+                    for (let i = 0; i < this.size; i++) {
+                        for (let j = 0; j < this.size; j++) {
+                            if (innerMatrix[i][j] === 1) {
+                                totalArea++;
+                            }
+                        }
+                    }
+                }
+                
+                // 实际面积：每个格子代表1m×1m，所以实际面积等于格子数
+                let actualArea = totalArea;
+                
+                document.getElementById('boundaryCells').textContent = boundaryCount;
+                document.getElementById('enclosedArea').textContent = totalArea;
+                document.getElementById('actualArea').textContent = actualArea;
+                document.getElementById('totalCells').textContent = this.size * this.size;
+            }
+
+            // 检测边界是否闭合的算法
+            isBoundaryClosed() {
+                // 首先检查是否有边界
+                let hasBoundary = false;
+                for (let i = 0; i < this.size; i++) {
+                    for (let j = 0; j < this.size; j++) {
+                        if (this.matrix[i][j] === 1) {
+                            hasBoundary = true;
+                            break;
+                        }
+                    }
+                    if (hasBoundary) break;
+                }
+                
+                if (!hasBoundary) {
+                    return true; // 没有边界，视为闭合
+                }
+                
+                // 使用洪水填充算法检测是否有内部区域
+                const visited = Array(this.size).fill().map(() => Array(this.size).fill(false));
+                const queue = [];
+                
+                // 将矩阵边缘的所有单元格加入队列（外部区域入口）
+                for (let i = 0; i < this.size; i++) {
+                    queue.push([i, 0]);
+                    queue.push([i, this.size - 1]);
+                    if (i > 0 && i < this.size - 1) {
+                        queue.push([0, i]);
+                        queue.push([this.size - 1, i]);
+                    }
+                }
+                
+                const directions = [[-1, 0], [0, 1], [1, 0], [0, -1]];
+                let innerAreaFound = false;
+                
+                // 洪水填充外部区域
+                while (queue.length > 0) {
+                    const [x, y] = queue.shift();
+                    
+                    if (x >= 0 && x < this.size && y >= 0 && y < this.size && !visited[x][y]) {
+                        visited[x][y] = true;
+                        
+                        if (this.matrix[x][y] === 0) {
+                            // 继续填充
+                            for (const [dx, dy] of directions) {
+                                queue.push([x + dx, y + dy]);
+                            }
+                        }
+                    }
+                }
+                
+                // 检查是否有未访问的单元格（内部区域）
+                for (let i = 0; i < this.size; i++) {
+                    for (let j = 0; j < this.size; j++) {
+                        if (!visited[i][j] && this.matrix[i][j] === 0) {
+                            innerAreaFound = true;
+                            break;
+                        }
+                    }
+                    if (innerAreaFound) break;
+                }
+                
+                return innerAreaFound;
+            }
+
+            // 识别边界内部区域的算法
+            identifyInnerArea() {
+                // 创建一个副本，避免修改原始矩阵
+                const matrixCopy = this.matrix.map(row => [...row]);
+                const innerMatrix = Array(this.size).fill().map(() => Array(this.size).fill(0));
+                
+                // 首先，将所有边界标记为1
+                for (let i = 0; i < this.size; i++) {
+                    for (let j = 0; j < this.size; j++) {
+                        if (matrixCopy[i][j] === 1) {
+                            innerMatrix[i][j] = 1;
+                        }
+                    }
+                }
+                
+                // 使用洪水填充算法识别外部区域（从矩阵边缘开始）
+                const visited = Array(this.size).fill().map(() => Array(this.size).fill(false));
+                const queue = [];
+                
+                // 将矩阵边缘的所有单元格加入队列（外部区域入口）
+                for (let i = 0; i < this.size; i++) {
+                    // 第一行和最后一行
+                    queue.push([i, 0]);
+                    queue.push([i, this.size - 1]);
+                    // 第一列和最后一列（跳过角落，避免重复）
+                    if (i > 0 && i < this.size - 1) {
+                        queue.push([0, i]);
+                        queue.push([this.size - 1, i]);
+                    }
+                }
+                
+                // 定义四个方向（上、右、下、左）
+                const directions = [[-1, 0], [0, 1], [1, 0], [0, -1]];
+                
+                // 洪水填充外部区域
+                while (queue.length > 0) {
+                    const [x, y] = queue.shift();
+                    
+                    // 检查是否在边界内且未访问
+                    if (x >= 0 && x < this.size && y >= 0 && y < this.size && !visited[x][y]) {
+                        visited[x][y] = true;
+                        
+                        // 如果是空白单元格（非边界），标记为外部区域
+                        if (matrixCopy[x][y] === 0) {
+                            // 外部区域保持0，继续填充
+                            for (const [dx, dy] of directions) {
+                                queue.push([x + dx, y + dy]);
+                            }
+                        }
+                        // 如果是边界单元格，不继续填充（边界阻挡外部区域）
+                    }
+                }
+                
+                // 现在，未被访问且不是边界的单元格就是边界内部区域
+                for (let i = 0; i < this.size; i++) {
+                    for (let j = 0; j < this.size; j++) {
+                        if (!visited[i][j]) {
+                            innerMatrix[i][j] = 1;
+                        }
+                    }
+                }
+                
+                return innerMatrix;
+            }
+
+            exportJSON() {
+                // 检测边界是否闭合
+                if (!this.isBoundaryClosed()) {
+                    alert('边界不闭合，无法导出JSON！');
+                    return;
+                }
+                
+                // 生成包含边界内部区域的矩阵
+                const innerMatrix = this.identifyInnerArea();
+                const json = JSON.stringify(innerMatrix, null, 2);
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `FPGGen_RoomLayoutMatrix_${this.size}x${this.size}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            importJSON(file) {
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        if (Array.isArray(data) && data.length > 0 && 
+                            data.every(row => Array.isArray(row) && row.length === data.length)) {
+                            // 获取导入矩阵的大小
+                            const importSize = data.length;
+                            
+                            // 检查大小是否在允许范围内（1-20）
+                            if (importSize >= 1 && importSize <= 20) {
+                                // 更新画布大小
+                                this.size = importSize;
+                                this.matrix = data;
+                                
+                                // 更新下拉选择框
+                                document.getElementById('gridSize').value = importSize;
+                                
+                                // 重新创建网格和更新统计信息
+                                this.createGrid();
+                                this.updateStats();
+                            } else {
+                                alert('无效的矩阵大小，请确保大小在1-20之间');
+                            }
+                        } else {
+                            alert('无效的JSON格式，请确保是正方形矩阵');
+                        }
+                    } catch (error) {
+                        alert('JSON解析失败：' + error.message);
+                    }
+                };
+                reader.readAsText(file);
+            }
+
+            clearMatrix() {
+                this.isPreviewing = false;
+                this.matrix = Array(this.size).fill().map(() => Array(this.size).fill(0));
+                this.createGrid();
+                this.updateStats();
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new BoundaryDrawer();
+        });
+    </script>
+</body>
+</html>
