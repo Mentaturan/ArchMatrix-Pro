@@ -69,7 +69,7 @@
 
 ---
 
-##🛠️ 技术栈 (Tech Stack)* **HTML5 / CSS3**: 使用 CSS Variables 管理主题，Flexbox/Grid 布局。
+###🛠️ 技术栈 (Tech Stack)* **HTML5 / CSS3**: 使用 CSS Variables 管理主题，Flexbox/Grid 布局。
 * **Vanilla JavaScript (ES6+)**:
 * 面向对象编程 (OOP) 架构。
 * 自定义状态管理与历史记录栈 (History Stack)。
@@ -79,7 +79,7 @@
 
 ---
 
-##📝 待办清单 (Roadmap)* [x] 基础绘图与擦除
+###📝 待办清单 (Roadmap)* [x] 基础绘图与擦除
 * [x] 闭合区域实时检测算法
 * [x] 历史记录撤销功能
 * [x] JSON 数据导入导出
@@ -89,7 +89,7 @@
 
 ---
 
-##📄 开源协议MIT License.
+###📄 开源协议MIT License.
 您可以自由地在个人项目、学术研究或商业项目中使用此代码。
 
 ---
