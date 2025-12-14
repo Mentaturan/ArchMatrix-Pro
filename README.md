@@ -69,7 +69,7 @@
 
 ---
 
-###🛠️ 技术栈 (Tech Stack)* **HTML5 / CSS3**: 使用 CSS Variables 管理主题，Flexbox/Grid 布局。
+### 🛠️ 技术栈 (Tech Stack)* **HTML5 / CSS3**: 使用 CSS Variables 管理主题，Flexbox/Grid 布局。
 * **Vanilla JavaScript (ES6+)**:
 * 面向对象编程 (OOP) 架构。
 * 自定义状态管理与历史记录栈 (History Stack)。
@@ -79,7 +79,7 @@
 
 ---
 
-###📝 待办清单 (Roadmap)* [x] 基础绘图与擦除
+### 📝 待办清单 (Roadmap)* [x] 基础绘图与擦除
 * [x] 闭合区域实时检测算法
 * [x] 历史记录撤销功能
 * [x] JSON 数据导入导出
@@ -89,23 +89,15 @@
 
 ---
 
-###📄 开源协议MIT License.
+### 📄 开源协议MIT License.
 您可以自由地在个人项目、学术研究或商业项目中使用此代码。
 
 ---
 
 *Designed for Architects, by Architects.*
-
-
-
-### 使用建议：
-
-1.  **添加截图**：建议您运行代码后，截图一张界面，保存为 `screenshot.png`，放在同一目录下。Markdown 代码中我已经预留了位置（虽然目前没有直接引用图片，但您可以添加 `![Screenshot](screenshot.png)` 在标题下方）。
-2.  **部署**：由于这是单文件 HTML，您可以直接将其上传到 GitHub Pages，立刻拥有一个在线演示地址。
-
-**需要我教您如何把它部署到 GitHub Pages 上生成一个在线链接吗？**
+ 
 
 ```
 **作者**：Mentat  
-**项目地址**：[[GitHub Repository URL](https://github.com/Mentaturan/building-boundary-json-drawer)]  
+**项目地址**：[[GitHub Repository URL](https://github.com/Mentaturan/ArchMatrix-Pro)]  
 **联系方式**：uran0831@qq.com
